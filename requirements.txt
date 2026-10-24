@@ -2,3 +2,5 @@ openai
 python-dotenv
 pypdf
 pytest
+sentence-transformers
+chromadb
