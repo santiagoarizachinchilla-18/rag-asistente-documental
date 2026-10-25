@@ -1,32 +1,32 @@
-# Pruebas funcionales del RAG - Corpus NovaTech
+# Evaluación funcional del asistente documental RAG — NovaTech
 
-## Objetivo y entorno de prueba
+## Objetivo y entorno de evaluación
 
-Evaluar tres comportamientos obligatorios del asistente documental: **respuesta completa**, **respuesta parcial** y **abstención**. Se registran a continuación las salidas reales compartidas por el ejecutor, sin sustituirlas por respuestas esperadas ni resultados simulados.
+Se evaluó el comportamiento del asistente documental en tres escenarios: **respuesta completa**, **respuesta parcial** y **abstención por falta de información**. Se conservaron las respuestas JSON obtenidas mediante ejecuciones reales de la API, junto con sus fuentes y una revisión manual de la pertinencia de las afirmaciones.
 
-- **Aplicación:** API local FastAPI, `POST /ask` desde Swagger.
-- **Corpus indexado:** 3 documentos: `politica_vacaciones.md`, `politica_trabajo_remoto.md` y `politica_gastos_viajes.pdf`.
-- **Índice persistente:** ChromaDB; `POST /index` devolvió `{"documents": 3, "chunks": 19}` tras sustituir el chunker.
-- **Parámetro de las tres consultas de esta evaluación:** `top_k=3` especificado en cada solicitud. Este valor probado **no implica** que se haya cambiado el valor predeterminado de la API.
-- **Pruebas automatizadas:** 28 aprobadas, según la ejecución informada por el usuario antes de esta evaluación.
+- **Aplicación:** API local desarrollada con FastAPI; las consultas se ejecutaron mediante `POST /ask` desde Swagger UI.
+- **Corpus indexado:** tres documentos ficticios de NovaTech: `politica_vacaciones.md`, `politica_trabajo_remoto.md` y `politica_gastos_viajes.pdf`.
+- **Índice vectorial:** ChromaDB con persistencia local. Después del ajuste de fragmentación, `POST /index` devolvió `{"documents": 3, "chunks": 19}`.
+- **Configuración de las consultas:** `top_k=3` se estableció explícitamente en los tres casos. El valor predeterminado de la API permanece en `top_k=4`.
+- **Pruebas automatizadas:** se registraron 28 pruebas aprobadas con `pytest` antes de esta evaluación funcional.
 - **Fecha de las pruebas:** 25 de octubre de 2026.
-- **Alcance:** evaluación manual de tres consultas; no constituye una medición estadística de precisión, exhaustividad o fiabilidad general.
+- **Alcance:** revisión manual de tres consultas concretas. Los resultados no representan una estimación estadística de precisión, exhaustividad o fiabilidad general.
 
 ## Resumen de resultados
 
-| Escenario | Resultado manual | Evidencia principal |
+| Escenario | Evaluación manual | Evidencia principal |
 |---|---|---|
 | Respuesta completa | Aprobada | Plazo de cinco días hábiles y aprobación administrativa, respaldados por el PDF. |
-| Respuesta parcial | Aprobada con observaciones | Distingue reglas de seguridad documentadas de permiso internacional no definido; cobertura de seguridad no exhaustiva. |
-| Abstención | Aprobada | No inventa salario y no atribuye fuentes. |
+| Respuesta parcial | Aprobada con observaciones | Diferencia las medidas de seguridad documentadas de una autorización internacional no especificada; la enumeración de medidas no es exhaustiva. |
+| Abstención | Aprobada | No se generaron cifras salariales sin respaldo y la lista de fuentes quedó vacía. |
 
-## Caso 1 - Respuesta completa
+## Caso 1. Respuesta completa
 
-**Pregunta literal:** ¿En qué plazo deben presentarse los comprobantes de gastos de viaje y quién aprueba el reembolso?
+**Pregunta evaluada:** ¿En qué plazo deben presentarse los comprobantes de gastos de viaje y quién aprueba el reembolso?
 
 **Solicitud:** `POST /ask`, `top_k=3`.
 
-**Respuesta real de la API (JSON completo):**
+**Respuesta obtenida de la API (JSON íntegro):**
 
 ```json
 {
@@ -58,15 +58,15 @@ Evaluar tres comportamientos obligatorios del asistente documental: **respuesta 
 }
 ```
 
-**Evaluación manual:** **Correcta.** Indica los cinco días hábiles posteriores al viaje y la aprobación del responsable administrativo. Las referencias [1], [2] y [3] son pertinentes y sustentan ambas afirmaciones.
+**Evaluación manual: aprobada.** Se identificaron correctamente el plazo de cinco días hábiles posteriores a la finalización del viaje y la aprobación del responsable administrativo. Los fragmentos citados mediante [1], [2] y [3] contienen evidencia directa de ambas condiciones.
 
-## Caso 2 - Respuesta parcial
+## Caso 2. Respuesta parcial
 
-**Pregunta literal:** ¿Puedo trabajar desde otro país durante tres meses y qué medidas de seguridad debo cumplir?
+**Pregunta evaluada:** ¿Puedo trabajar desde otro país durante tres meses y qué medidas de seguridad debo cumplir?
 
 **Solicitud:** `POST /ask`, `top_k=3`.
 
-**Respuesta real de la API (JSON completo):**
+**Respuesta obtenida de la API (JSON íntegro):**
 
 ```json
 {
@@ -91,15 +91,15 @@ Evaluar tres comportamientos obligatorios del asistente documental: **respuesta 
 }
 ```
 
-**Evaluación manual:** **Correcta con observaciones.** Distingue la falta de una autorización específica para estancias internacionales prolongadas de las medidas de seguridad sí documentadas. El contexto citado respalda equipos corporativos, VPN, credenciales y soporte. La respuesta omite otras medidas establecidas en la política (bloquear la sesión ante un equipo desatendido e informar pérdida o posibles accesos no autorizados); además, la palabra "únicamente" refuerza una exclusividad no expresada literalmente en el fragmento, que exige usar VPN sin usar esa palabra. Estas observaciones no invalidan el comportamiento de respuesta parcial, pero impiden calificarla como exhaustiva.
+**Evaluación manual: aprobada con observaciones.** Se distinguió correctamente entre la ausencia de reglas específicas para estancias prolongadas en el extranjero y las medidas de seguridad documentadas. Las referencias respaldan el uso de equipos corporativos, VPN, la prohibición de compartir credenciales y el contacto con soporte ante problemas de acceso. No obstante, la respuesta omitió el bloqueo de sesión cuando el equipo queda desatendido y la notificación de pérdidas o posibles accesos no autorizados. Asimismo, el término «únicamente», aplicado a la VPN, introduce un énfasis más restrictivo que el expresado literalmente en el documento. Se considera demostrada la capacidad de respuesta parcial, pero no la cobertura exhaustiva de las medidas de seguridad.
 
-## Caso 3 - Abstención
+## Caso 3. Abstención
 
-**Pregunta literal:** ¿Cuál es el salario promedio de los empleados de NovaTech?
+**Pregunta evaluada:** ¿Cuál es el salario promedio de los empleados de NovaTech?
 
 **Solicitud:** `POST /ask`, `top_k=3`.
 
-**Respuesta real de la API (JSON completo):**
+**Respuesta obtenida de la API (JSON íntegro):**
 
 ```json
 {
@@ -109,23 +109,23 @@ Evaluar tres comportamientos obligatorios del asistente documental: **respuesta 
 }
 ```
 
-**Evaluación manual:** **Correcta.** El corpus no incluye cifras salariales. El asistente no inventa datos y devuelve `sources: []`.
+**Evaluación manual: aprobada.** Los documentos del corpus no proporcionan cifras de salarios. Se obtuvo la abstención prevista y `sources: []`, sin incorporar información salarial ajena a las fuentes.
 
-## Hallazgos y cambios durante P6
+## Hallazgos y ajustes de la implementación
 
-1. **Indexación del corpus:** tres documentos procesados correctamente. Antes de ajustar la fragmentación, el índice tenía 16 chunks; después de reindexar con el chunker corregido, quedó con 19.
-2. **Respuesta parcial inicial:** con el prompt anterior se produjo una abstención total aunque se habían recuperado fragmentos pertinentes de trabajo remoto. El prompt se ajustó para exigir contestar por separado las partes respaldadas y reconocer expresamente los vacíos de información.
-3. **Ruido con `top_k=4`:** en una prueba intermedia se recuperó un fragmento de gastos y viajes y el modelo añadió condiciones de reembolso irrelevantes para una pregunta de trabajo remoto internacional. Una prueba posterior con `top_k=3` eliminó ese apartado improcedente.
-4. **Fragmentación:** se observaron cortes a mitad de oración y palabras aparentemente unidas en el índice anterior. Se sustituyó `app/chunker.py`, conservando tamaño de chunk 400 y solapamiento 60. La reindexación posterior produjo 19 fragmentos. Los extractos de estas pruebas finales no exhiben las palabras pegadas previamente observadas, pero la inspección de todos los fragmentos finales no forma parte de este registro.
-5. **Referencias:** los números devueltos corresponden a fragmentos reales. Esta comprobación manual evalúa además si los extractos sustentan las respuestas; una referencia válida por formato no garantiza pertinencia semántica.
+1. **Indexación:** se procesaron tres documentos. La configuración anterior produjo 16 fragmentos; tras ajustar el algoritmo y reconstruir el índice, se registraron 19.
+2. **Tratamiento de preguntas con varias partes:** inicialmente se obtuvo una abstención total pese a existir contexto pertinente sobre trabajo remoto. Se precisaron las instrucciones de generación para responder las partes respaldadas e identificar por separado los datos no especificados.
+3. **Pertinencia del contexto:** con `top_k=4` se recuperó también un fragmento de gastos y viajes, lo que dio lugar a una sección de reembolsos ajena a la consulta sobre trabajo remoto. En una prueba posterior con `top_k=3`, esa información irrelevante dejó de aparecer.
+4. **Integridad de los fragmentos:** en el índice anterior se detectaron oraciones truncadas y algunas palabras aparentemente unidas. Se ajustó `app/chunker.py` para favorecer límites de oración, manteniendo un tamaño máximo de 400 caracteres y un solapamiento de 60. Tras reindexar se obtuvieron 19 fragmentos. En los extractos citados de la evaluación final no se observaron las uniones de palabras detectadas anteriormente; no se realizó una auditoría exhaustiva de todos los fragmentos del índice.
+5. **Trazabilidad:** las referencias numéricas corresponden a fragmentos recuperados e identificables. Se revisó también la relación entre los extractos citados y las afirmaciones generadas. La validez numérica de una cita, por sí sola, no garantiza que su contenido respalde semánticamente la respuesta.
 
-## Limitaciones observadas
+## Limitaciones y alcance de los resultados
 
-- El caso de respuesta parcial no enumera todas las medidas de seguridad establecidas en la política: falta mencionar el bloqueo de sesión y el reporte de incidentes. Asimismo, el término "únicamente" introduce un matiz más fuerte que el texto citado sobre VPN.
-- `top_k=3` funcionó para estas tres preguntas, pero no se ha demostrado que sea óptimo para todas las consultas ni se ha cambiado necesariamente el valor predeterminado del servicio.
-- Con un corpus pequeño y tres casos funcionales, esta evaluación muestra comportamientos concretos, no una garantía de desempeño general.
-- La colección se reconstruye al reindexar; no se realizaron consultas concurrentes durante ese proceso.
+- **Cobertura parcial:** no se mencionaron todas las medidas de seguridad de la política; quedaron fuera el bloqueo de sesión y el reporte de incidentes. La expresión «únicamente mediante la VPN» es más restrictiva que la formulación literal de la fuente.
+- **Número de fragmentos recuperados:** `top_k=3` produjo respuestas adecuadas en estas tres consultas, pero no se ha establecido como configuración óptima. La API conserva `top_k=4` como valor predeterminado.
+- **Representatividad:** el corpus y la cantidad de preguntas son reducidos. Los resultados describen los casos observados y no permiten generalizar el desempeño a otros documentos o consultas.
+- **Reindexación:** la colección se reemplaza al volver a indexar; no se evaluó su comportamiento ante consultas simultáneas o fallos durante la reconstrucción.
 
 ## Conclusión
 
-Los tres escenarios requeridos fueron demostrados con salidas reales: respuesta documentada con citas, respuesta parcial con reconocimiento de información no definida y abstención ante ausencia de evidencia. **P6 puede darse por validada a nivel funcional, con observaciones documentadas en la respuesta parcial.** La siguiente etapa es completar el README y la evidencia de ejecución para la entrega.
+Se comprobaron los tres escenarios definidos para la evaluación: una respuesta sustentada en fragmentos identificables, una respuesta parcial que reconoce información no especificada y una abstención sin fuentes ante una pregunta fuera del corpus. **La validación funcional de estos casos se completó, con limitaciones documentadas en la respuesta parcial.**
