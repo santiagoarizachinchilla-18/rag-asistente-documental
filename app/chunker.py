@@ -29,10 +29,19 @@ def split_text(
         end = min(start + chunk_size, len(text))
 
         if end < len(text):
-            separator = text.rfind(" ", start, end)
+            sentence_boundary = text.rfind(
+                ". ",
+                start + chunk_size // 2,
+                end,
+            )
 
-            if separator > start:
-                end = separator
+            if sentence_boundary != -1:
+                end = sentence_boundary + 1
+            else:
+                separator = text.rfind(" ", start, end)
+
+                if separator > start:
+                    end = separator
 
         chunk = text[start:end].strip()
 
@@ -47,7 +56,7 @@ def split_text(
         if chunk_overlap > 0:
             sentence_boundary = text.rfind(
                 ". ",
-                max(start, next_start - chunk_overlap),
+                start,
                 next_start,
             )
 

@@ -42,14 +42,27 @@ def generate_answer(
         "Responde en español utilizando exclusivamente "
         "la información de los fragmentos proporcionados. "
         "No utilices conocimiento externo ni inventes datos. "
-        "Si una pregunta contiene varias partes, analiza cada "
-        "una por separado. Responde todas las partes respaldadas "
-        "por los fragmentos y cita sus fuentes. "
-        "Para las partes sin información suficiente, explica "
-        "qué detalle no está especificado, sin asumir respuestas. "
-        "Solo cuando NINGUNA parte de la pregunta pueda responderse "
-        "con el contexto, responde exactamente: "
+
+        "Si la pregunta contiene varias partes, evalúa cada parte "
+        "de manera independiente. La ausencia de información para "
+        "una parte NO invalida las respuestas de las demás. "
+
+        "Debes responder todas las partes respaldadas por el contexto, "
+        "aunque otra parte de la pregunta no pueda resolverse. "
+        "Para cada parte respondible, proporciona la información "
+        "documentada e incluye sus referencias numéricas. "
+
+        "Para las partes sin evidencia suficiente, indica expresamente "
+        "qué información no está especificada. No asumas autorizaciones, "
+        "prohibiciones ni condiciones que no aparezcan en los documentos. "
+
+        "Si existe información pertinente para responder al menos "
+        "una parte, NO devuelvas una abstención total. "
+
+        "Únicamente cuando ninguna parte de la pregunta pueda "
+        "responderse con la evidencia disponible, responde exactamente: "
         f"'{ABSTENTION_MESSAGE}' "
+
         "Cuando utilices información de un fragmento, "
         "incluye su referencia numérica, por ejemplo [1]. "
         "No inventes referencias."
