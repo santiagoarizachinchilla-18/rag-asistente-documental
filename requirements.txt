@@ -4,3 +4,6 @@ pypdf
 pytest
 sentence-transformers
 chromadb
+fastapi
+uvicorn
+httpx
