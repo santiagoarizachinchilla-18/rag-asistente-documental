@@ -44,6 +44,25 @@ def split_text(
 
         next_start = end - chunk_overlap
 
+        if chunk_overlap > 0:
+            sentence_boundary = text.rfind(
+                ". ",
+                max(start, next_start - chunk_overlap),
+                next_start,
+            )
+
+            if sentence_boundary != -1:
+                next_start = sentence_boundary + 2
+            else:
+                word_boundary = text.rfind(
+                    " ",
+                    start,
+                    next_start,
+                )
+
+                if word_boundary != -1:
+                    next_start = word_boundary + 1
+
         if next_start <= start:
             next_start = end
 

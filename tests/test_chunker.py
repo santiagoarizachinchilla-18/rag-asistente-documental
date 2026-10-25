@@ -44,3 +44,22 @@ def test_chunk_metadata():
     assert len(chunks) == 1
     assert chunks[0]["chunk_id"] == "politica_vacaciones_001"
     assert chunks[0]["source"] == "politica_vacaciones.md"
+
+
+def test_overlap_preserves_word_boundaries():
+    text = " ".join(
+        f"palabra{i}" for i in range(100)
+    )
+
+    chunks = split_text(
+        text,
+        chunk_size=80,
+        chunk_overlap=20,
+    )
+
+    original_words = set(text.split())
+
+    assert all(
+        chunk.split()[0] in original_words
+        for chunk in chunks
+    )
