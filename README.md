@@ -119,63 +119,142 @@ rag-asistente-documental/
 
 ## Requisitos
 
-- **Windows con Python 3.12**; entorno de desarrollo utilizado: Python **3.12.10**, VS Code y Git Bash.
+- **Windows**, **Git Bash** y **Python 3.12** (en el desarrollo se utilizó Python **3.12.10**). La instalación de Python y Git Bash se explica a continuación; VS Code es opcional.
 - Acceso a Internet para instalar dependencias, descargar inicialmente el modelo de embeddings y consultar el LLM.
 - Una **clave de API válida del proveedor configurado** (en las pruebas se utilizó Groq).
 - Dependencias declaradas en [`requirements.txt`](requirements.txt).
 
-Se comprobó el funcionamiento en un entorno local de desarrollo. **Todavía no se ha verificado una instalación completa desde un clon limpio**, y `requirements.txt` no fija versiones exactas. Los comandos siguientes describen el procedimiento de instalación previsto; no representan una garantía de reproducibilidad binaria en cualquier equipo.
+Se comprobó el funcionamiento en un entorno local de desarrollo. `requirements.txt` todavía no fija versiones exactas, por lo que las versiones resueltas durante una instalación pueden variar entre equipos.
 
 ## Instalación y configuración (Git Bash en Windows)
 
-1. Se clona el repositorio desde la URL facilitada para la prueba y se abre Git Bash en la carpeta raíz `rag-asistente-documental/`. Si el repositorio ya está descargado, se utiliza esa carpeta directamente.
+Se siguen estos pasos **en orden**. Python es un requisito del sistema y no se instala automáticamente mediante `requirements.txt`; ese archivo instala únicamente las bibliotecas de la aplicación.
 
-2. Se crea y activa el entorno virtual:
+### 1. Instalar Python 3.12
 
-   ```bash
-   py -3.12 -m venv .venv
-   source .venv/Scripts/activate
-   python --version
+Si Python 3.12 ya está instalado, se puede pasar directamente a comprobar su versión. De lo contrario, se dispone de dos alternativas:
+
+- **Instalador oficial de Windows:** descargar Python 3.12.10 desde [python.org](https://www.python.org/downloads/release/python-31210/) y ejecutar el instalador. Cuando se ofrezca, habilitar **Add Python to PATH** y asegurarse de instalar el **Python Launcher** (`py`).
+- **Mediante PowerShell:** si el equipo tiene `winget`, ejecutar el siguiente comando **en PowerShell, no en Git Bash**:
+
+  ```powershell
+  winget install --id Python.Python.3.12 --exact
+  ```
+
+Tras instalar Python, se cierran y vuelven a abrir las terminales. En **Git Bash**, se comprueba que esté disponible:
+
+```bash
+py -3.12 --version
+```
+
+Debe aparecer una versión **3.12.x**. Si el comando `py` no está disponible, se puede comprobar `python --version` y utilizar `python` para crear el entorno virtual **solo si corresponde a Python 3.12**.
+
+### 2. Descargar el repositorio y abrir Git Bash
+
+Se requiere **Git Bash**, incluido en [Git para Windows](https://git-scm.com/downloads/win). Si todavía no está instalado, se instala antes de continuar.
+
+Desde Git Bash, se descarga el repositorio y se entra a su carpeta:
+
+```bash
+git clone https://github.com/santiagoarizachinchilla-18/rag-asistente-documental.git
+cd rag-asistente-documental
+```
+
+Si el proyecto ya se descargó como ZIP o se clonó anteriormente, se abre Git Bash **dentro de la carpeta raíz** `rag-asistente-documental/` y se omite el comando `git clone`. Esta es la carpeta donde están `README.md`, `requirements.txt`, `.env.example`, `app/` y `documents/`.
+
+### 3. Crear y activar el entorno virtual
+
+En Git Bash, desde la raíz del repositorio, se ejecuta:
+
+```bash
+py -3.12 -m venv .venv
+source .venv/Scripts/activate
+python --version
+```
+
+El entorno virtual aísla las bibliotecas del proyecto de otras instalaciones de Python. Cuando está activo, la terminal suele mostrar `(.venv)` al inicio. `python --version` debe indicar Python 3.12. Si se usa la alternativa `python` indicada en el paso 1, se sustituye únicamente el primer comando por `python -m venv .venv`.
+
+### 4. Instalar las dependencias
+
+Con `(.venv)` activo, se ejecuta:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Se deben dejar finalizar las instalaciones antes de iniciar la API. El comando instala las bibliotecas de `requirements.txt`, pero **no** Python ni una clave de acceso al proveedor LLM.
+
+### 5. Obtener una clave personal de Groq
+
+La generación de respuestas utiliza **GroqCloud**. Para conseguir la clave:
+
+1. Se accede a [GroqCloud — API Keys](https://console.groq.com/keys).
+2. Se crea una cuenta o se inicia sesión.
+3. Se selecciona **Create API Key** y se guarda la clave generada en un lugar seguro.
+
+Cada instalación debe configurarse con su **propia clave**. La disponibilidad del modelo y sus límites de uso dependen de la cuenta y las condiciones del proveedor. No se debe compartir una clave personal con otras personas.
+
+### 6. Configurar el archivo `.env`
+
+Desde Git Bash, en la raíz del repositorio, se copia la plantilla:
+
+```bash
+cp .env.example .env
+```
+
+Se abre el nuevo archivo `.env` con VS Code u otro editor de texto y se completa la variable `LLM_API_KEY` con la clave creada en el paso anterior:
+
+```dotenv
+LLM_API_KEY=TU_CLAVE_PERSONAL_DE_GROQ
+LLM_BASE_URL=https://api.groq.com/openai/v1
+LLM_MODEL=openai/gpt-oss-20b
+```
+
+Se reemplaza `TU_CLAVE_PERSONAL_DE_GROQ` por la clave real **solo en el equipo local**. El nombre correcto de la variable es `LLM_API_KEY`, tal como lo utiliza el código; no debe cambiarse a `GROQ_API_KEY`.
+
+**La clave real nunca debe incluirse en Git, capturas, videos, mensajes ni archivos compartidos.** El archivo `.env` está excluido de Git. El modelo de embeddings y la ubicación de ChromaDB están definidos actualmente en los módulos Python.
+
+### 7. Iniciar FastAPI y abrir Swagger
+
+Con el entorno virtual activo, el archivo `.env` configurado y la terminal ubicada en la raíz del repositorio, se ejecuta:
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+**Se deja abierta esta terminal mientras se utiliza la aplicación.** Cuando Uvicorn indique que el inicio ha finalizado, se abre en el navegador:
+
+**http://127.0.0.1:8000/docs**
+
+Esta página es **Swagger**, la interfaz interactiva incluida con FastAPI para ejecutar los endpoints sin necesidad de programar un frontend. `--reload` facilita el desarrollo local. Para detener el servidor, se presiona `Ctrl+C` en la terminal donde se está ejecutando.
+
+### 8. Comprobar que la API responde
+
+En Swagger:
+
+1. Se despliega **`GET /health`** haciendo clic sobre su fila.
+2. Se selecciona **Try it out** y luego **Execute**.
+3. Se comprueba que el código HTTP sea **`200`** y que en **Response body** aparezca:
+
+   ```json
+   {
+     "status": "ok"
+   }
    ```
 
-3. Se instalan las dependencias:
-
-   ```bash
-   python -m pip install -r requirements.txt
-   ```
-
-4. Se crea el archivo local de configuración:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Se edita `.env` **únicamente en el equipo local**, asignando una clave real a `LLM_API_KEY`. La plantilla contiene estas variables:
-
-   ```dotenv
-   LLM_API_KEY=
-   LLM_BASE_URL=https://api.groq.com/openai/v1
-   LLM_MODEL=openai/gpt-oss-20b
-   ```
-
-   **La clave real no debe incluirse en Git, capturas, videos, mensajes ni archivos compartidos.** El proveedor y el modelo se configuran desde este archivo; el modelo de embeddings y la ubicación de ChromaDB están definidos actualmente en el código Python.
-
-5. Se inicia la aplicación **desde la raíz del repositorio**:
-
-   ```bash
-   python -m uvicorn app.main:app --reload
-   ```
-
-   Se accede a Swagger desde **http://127.0.0.1:8000/docs**. `--reload` se utiliza en desarrollo local. La primera indexación puede requerir la descarga del modelo de Sentence Transformers.
+Esta comprobación confirma que el servidor responde, pero **todavía no significa que los documentos estén indexados**. Antes de preguntar se debe ejecutar `POST /index`, como se explica en la siguiente sección.
 
 ## Cargar e indexar documentos
 
-La API **no recibe archivos mediante un formulario ni mediante un endpoint de subida**. Para agregar o cambiar documentos:
+La API **no recibe archivos mediante un formulario ni mediante un endpoint de subida**. Los documentos se leen directamente desde la carpeta `documents/`, que ya contiene las tres políticas ficticias de NovaTech.
 
-1. Se colocan los archivos compatibles (`.md`, `.txt` o `.pdf` textual) directamente en `documents/`. Los Markdown y TXT deben poder leerse como UTF-8; los PDF escaneados sin capa de texto no están soportados.
-2. Desde Swagger, se ejecuta **`POST /index`** sin cuerpo de solicitud.
-3. Al finalizar, el endpoint habrá leído los archivos compatibles, generado sus fragmentos y embeddings y **reemplazado** la colección de ChromaDB.
-4. Durante la reconstrucción no deben ejecutarse consultas ni otra indexación de forma simultánea.
+Para cargar o actualizar documentos:
+
+1. Se comprueba que FastAPI esté ejecutándose y que Swagger esté abierto en **http://127.0.0.1:8000/docs**.
+2. Si se quieren agregar documentos propios, se copian directamente a `documents/` archivos `.md`, `.txt` (codificación UTF-8) o `.pdf` **con texto extraíble**. Los PDF escaneados sin capa de texto no están soportados.
+3. En Swagger, se localiza y despliega **`POST /index`**.
+4. Se hace clic en **Try it out** y después en **Execute**. Este endpoint **no necesita un JSON ni un archivo adjunto**.
+5. Se comprueba que aparezca el código HTTP **`200`** y se consulta **Response body** para conocer el número de documentos y fragmentos indexados.
 
 Con el corpus NovaTech definitivo y el chunker actualizado, el resultado real observado fue:
 
@@ -186,11 +265,26 @@ Con el corpus NovaTech definitivo y el chunker actualizado, el resultado real ob
 }
 ```
 
-La cantidad de fragmentos puede cambiar si se modifican los documentos o el algoritmo. La carpeta se procesa de forma **no recursiva** y los formatos no compatibles se omiten.
+La primera indexación puede requerir descargar el modelo de Sentence Transformers desde Hugging Face. La cantidad de fragmentos puede cambiar si se modifican los documentos o el algoritmo. La carpeta se procesa de forma **no recursiva** y los formatos no compatibles se omiten.
+
+**No es necesario indexar antes de cada pregunta:** el índice permanece guardado localmente en `data/chroma/`. Si se agregan, eliminan o modifican documentos, debe ejecutarse nuevamente `POST /index` para actualizarlo. Durante la reconstrucción no deben ejecutarse consultas ni otra indexación de forma simultánea.
 
 ## Consultar el asistente
 
-Después de indexar, se abre **`POST /ask`** desde Swagger y se envía un JSON como este:
+Después de ejecutar `POST /index` correctamente, se utiliza **`POST /ask`** para formular preguntas sobre los documentos.
+
+### Cómo ejecutar una pregunta desde Swagger
+
+1. Se mantiene abierta la terminal donde se está ejecutando Uvicorn y se accede a **http://127.0.0.1:8000/docs**.
+2. Se despliega **`POST /ask`** y se selecciona **Try it out**.
+3. En el campo **Request body**, se reemplaza el JSON de ejemplo por **uno** de los tres bloques incluidos a continuación. Se conserva su estructura: `question` es la pregunta y `top_k` indica cuántos fragmentos se intentan recuperar.
+4. Se hace clic en **Execute** y se espera la respuesta. En la primera consulta puede tardar más mientras se carga el modelo de embeddings.
+5. Se comprueba que **Server response** muestre el código **`200`**. Dentro de **Response body**, se revisan `answer` (respuesta generada) y `sources` (documentos y fragmentos citados).
+6. Para ejecutar la siguiente pregunta, se reemplaza el contenido completo de **Request body** por el siguiente JSON y se pulsa **Execute** nuevamente. **No se debe ejecutar `POST /index` entre estas tres consultas.**
+
+### Tres preguntas recomendadas para comprobar el RAG
+
+**Prueba 1 — Pregunta completamente respondible**
 
 ```json
 {
@@ -199,12 +293,29 @@ Después de indexar, se abre **`POST /ask`** desde Swagger y se envía un JSON c
 }
 ```
 
-- `question`: texto obligatorio entre **1 y 1000 caracteres**; no admite solo espacios.
-- `top_k`: cantidad de fragmentos solicitados, **entero positivo**. El valor predeterminado del código es **4**; en las tres pruebas funcionales definitivas se indicó **3** explícitamente. No se ha demostrado que 3 sea óptimo para todas las preguntas.
+Se espera que se indiquen los **cinco días hábiles posteriores al viaje** y la aprobación por el **responsable administrativo**, con referencias a fragmentos de `politica_gastos_viajes.pdf`.
 
-La respuesta contiene `question`, `answer` y `sources`. Cada fuente citada informa `reference`, `source`, `chunk_id`, `excerpt` y `distance`.
+**Prueba 2 — Pregunta parcialmente respondible**
 
-Por ejemplo, esta fue la **respuesta real de abstención** obtenida en la evaluación:
+```json
+{
+  "question": "¿Puedo trabajar desde otro país durante tres meses y qué medidas de seguridad debo cumplir?",
+  "top_k": 3
+}
+```
+
+Se espera que se expliquen las medidas de seguridad documentadas (como el uso de equipo corporativo y VPN y la prohibición de compartir credenciales), pero que **no se afirme que trabajar desde otro país durante tres meses está permitido o prohibido**, porque la política no establece esa autorización específica. Las fuentes pertinentes pertenecen a `politica_trabajo_remoto.md`.
+
+**Prueba 3 — Pregunta sin respuesta en los documentos**
+
+```json
+{
+  "question": "¿Cuál es el salario promedio de los empleados de NovaTech?",
+  "top_k": 3
+}
+```
+
+Como no existen datos salariales en el corpus, se espera una **abstención** sin cifras inventadas ni fuentes atribuidas indebidamente. En la evaluación registrada se obtuvo:
 
 ```json
 {
@@ -214,7 +325,16 @@ Por ejemplo, esta fue la **respuesta real de abstención** obtenida en la evalua
 }
 ```
 
-Una referencia `[1]` identifica el primer fragmento numerado que recibió el modelo en esa consulta; no significa necesariamente el primer fragmento del documento. La **distancia coseno** indica proximidad en el espacio vectorial: menor distancia implica mayor cercanía, **no** una probabilidad de certeza ni prueba suficiente de que el fragmento respalde cada afirmación.
+Estas son las **preguntas usadas en las pruebas funcionales**, pero la redacción exacta de las respuestas puede variar entre ejecuciones del modelo generativo. Las salidas reales registradas y su evaluación manual se encuentran en [`resultados/pruebas_funcionales.md`](resultados/pruebas_funcionales.md).
+
+### Cómo interpretar la respuesta
+
+- **`question`**: pregunta enviada a la API.
+- **`answer`**: texto generado por el LLM; una cita `[1]` o `[2]` remite a un fragmento numerado de esa misma consulta.
+- **`sources`**: lista de fragmentos efectivamente citados. Cada entrada incluye `reference` (número de cita), `source` (archivo), `chunk_id` (identificador), `excerpt` (texto recuperado) y `distance` (distancia coseno).
+- **`top_k`**: entero positivo que define el máximo de fragmentos solicitados. Su valor predeterminado en el código es **4**; en las tres pruebas anteriores se configura explícitamente **3**. No se ha demostrado que 3 sea óptimo para cualquier consulta.
+
+Una distancia menor significa mayor proximidad vectorial, **no** un porcentaje de certeza ni una garantía de que la información respalde cada afirmación. Si Swagger devuelve un error, se revisa el código HTTP y la tabla de errores de la siguiente sección.
 
 ### Endpoints y errores principales
 
@@ -259,7 +379,7 @@ Las **preguntas literales, respuestas JSON completas, identificadores de fragmen
 - **Chunking:** heurístico por tamaño, solapamiento y límites de oración; no garantiza preservar íntegramente toda unidad semántica o todos los detalles relevantes.
 - **Reindexación:** borra y recrea la colección actual; no es atómica y una falla durante el proceso puede dejar el índice incompleto. Por ello, no se recomienda reindexar mientras se responde a preguntas.
 - **Operación y seguridad:** prototipo local sin autenticación, permisos por usuario, interfaz de subida ni despliegue productivo. Los fragmentos recuperados se envían al proveedor externo del LLM.
-- **Dependencias y errores:** `requirements.txt` no fija versiones; no está verificada una instalación completa desde un clon nuevo y el manejo de excepciones cubre solo casos seleccionados.
+- **Dependencias y errores:** `requirements.txt` no fija versiones y el manejo de excepciones cubre solo casos seleccionados.
 
 ## Mejoras futuras
 
